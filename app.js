@@ -7,6 +7,13 @@ function showApp(loggedIn) {
   $("app-view").hidden = !loggedIn;
 }
 
+function initMap() {
+  if (state.map) return;
+  state.map = L.map("map").setView([-10.2, -52.0], 4);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors" }).addTo(state.map);
+  requestAnimationFrame(() => state.map.invalidateSize());
+}
+
 function formatDate(value) {
   return value ? new Date(value).toLocaleString("pt-BR") : "Nunca";
 }
@@ -68,6 +75,7 @@ $("login-form").addEventListener("submit", async (event) => {
     state.token = (await response.json()).access_token;
     sessionStorage.setItem("iot_token", state.token);
     showApp(true);
+    initMap();
     await loadStatus();
   } catch (error) { $("login-error").textContent = error.message; }
 });
@@ -77,6 +85,8 @@ $("refresh").addEventListener("click", () => loadStatus().catch((error) => { $("
 $("region-filter").addEventListener("change", render);
 $("status-filter").addEventListener("change", render);
 
-state.map = L.map("map").setView([-10.2, -52.0], 4);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap contributors" }).addTo(state.map);
-if (state.token) { showApp(true); loadStatus().catch(() => showApp(false)); }
+if (state.token) {
+  showApp(true);
+  initMap();
+  loadStatus().catch(() => showApp(false));
+}
